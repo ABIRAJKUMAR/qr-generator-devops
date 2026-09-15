@@ -1,0 +1,30 @@
+---
+- name: Manage Jenkins Docker Agent
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    agent_name: "docker-agent"
+    jenkins_url: "http://jenkins-controller:8080"
+    agent_secret: "1b48b34a8d106c9433bf939cb6a30a56ee54d1f7f375c8f0c1a4f1d7b54af9bc"
+
+  tasks:
+    - name: Start Jenkins Docker Agent
+      community.docker.docker_container:
+        name: "{{ agent_name }}"
+        image: "jenkins-agent-tools:latest"
+        state: started
+        restart_policy: unless-stopped
+
+        env:
+          JENKINS_URL: "{{ jenkins_url }}"
+          JENKINS_SECRET: "{{ agent_secret }}"
+          JENKINS_AGENT_NAME: "{{ agent_name }}"
+          JENKINS_TUNNEL: "jenkins-controller:50000"
+
+        volumes:
+          - "/var/run/docker.sock:/var/run/docker.sock"
+
+        networks:
+          - name: jenkins-net
